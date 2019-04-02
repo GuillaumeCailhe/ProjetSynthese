@@ -24,11 +24,11 @@
 #include "camera.h"
 #include "meshLoader.h"
 #include "shader.h"
+#include "grid.h"
 
 class Viewer : public QGLWidget {
  public:
-  Viewer(char *filename,
-	 const QGLFormat &format=QGLFormat::defaultFormat());
+  Viewer(const QGLFormat &format=QGLFormat::defaultFormat());
   ~Viewer();
   
  protected :
@@ -54,7 +54,6 @@ class Viewer : public QGLWidget {
   QTimer        *_timer;    // timer that controls the animation
   unsigned int   _currentshader; // current shader index
 
-  Mesh   *_mesh;   // the mesh
   Camera *_cam;    // the camera
 
   glm::vec3 _light; // light direction
@@ -70,6 +69,13 @@ class Viewer : public QGLWidget {
 
   // texture ids 
   GLuint _texIds[1];
+
+  GLuint _vaoTerrain;
+  GLuint _vaoQuad;
+  GLuint _terrain[2];
+
+  GLuint _quad;
+  Grid* _grid;
 };
 
 #endif // VIEWER_H

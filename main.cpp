@@ -7,15 +7,6 @@
 
 using namespace std;
 
-char *getFilename(int argc,char **argv) {
-  if(argc<2) {
-    cout << "Usage: " << argv[0] << " offFile" << endl;
-    exit(0);
-  }
-
-  return argv[1];
-}
-
 int main(int argc,char** argv) {
   QApplication application(argc,argv);
   
@@ -24,9 +15,9 @@ int main(int argc,char** argv) {
   fmt.setProfile(QGLFormat::CoreProfile);
   fmt.setSampleBuffers(true);
 
-  Viewer viewer(getFilename(argc,argv),fmt);
+  Viewer viewer(fmt);
 
-  viewer.setWindowTitle("Exercice 06 - Appearance");
+  viewer.setWindowTitle("Terrain rendering");
   viewer.show();
   
   return application.exec();

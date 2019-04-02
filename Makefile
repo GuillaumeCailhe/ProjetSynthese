@@ -1042,7 +1042,8 @@ main.o: main.cpp viewer.h \
 		mat4.h \
 		vec4.h \
 		meshLoader.h \
-		shader.h
+		shader.h \
+		grid.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
 viewer.o: viewer.cpp viewer.h \
@@ -1055,7 +1056,8 @@ viewer.o: viewer.cpp viewer.h \
 		mat4.h \
 		vec4.h \
 		meshLoader.h \
-		shader.h
+		shader.h \
+		grid.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o viewer.o viewer.cpp
 
 ####### Install

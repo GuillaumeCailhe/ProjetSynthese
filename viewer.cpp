@@ -8,7 +8,7 @@
 using namespace std;
 
 
-Viewer::Viewer(char *filename,const QGLFormat &format)
+Viewer::Viewer(const QGLFormat &format)
   : QGLWidget(format),
     _timer(new QTimer(this)),
     _currentshader(0),
@@ -17,16 +17,12 @@ Viewer::Viewer(char *filename,const QGLFormat &format)
 
   setlocale(LC_ALL,"C");
 
-  _mesh = new Mesh(filename);
-  _cam  = new Camera(_mesh->radius,glm::vec3(_mesh->center[0],_mesh->center[1],_mesh->center[2]));
-
   _timer->setInterval(10);
   connect(_timer,SIGNAL(timeout()),this,SLOT(updateGL()));
 }
 
 Viewer::~Viewer() {
   delete _timer;
-  delete _mesh;
   delete _cam;
 
   for(unsigned int i=0;i<_shaders.size();++i) {
@@ -74,69 +70,60 @@ void Viewer::deleteTextures() {
 }
 
 void Viewer::createVAO() {
-  // create VAO
-  glGenVertexArrays(1,&_vao);
+  //the variable _grid should be an instance of Grid
+  //the .h file should contain the following VAO/buffer ids
+  //GLuint _vaoTerrain;
+  //GLuint _vaoQuad;
+  //GLuint _terrain[2];
+  //GLuint _quad;
 
-  // create 5 associated VBOs (for positions, normals, tangents, coords and face indices)
-  glGenBuffers(5,_buffers);
+  const GLfloat quadData[] = {
+    -1.0f,-1.0f,0.0f, 1.0f,-1.0f,0.0f, -1.0f,1.0f,0.0f, -1.0f,1.0f,0.0f, 1.0f,-1.0f,0.0f, 1.0f,1.0f,0.0f };
 
-  // bind VAO 
-  glBindVertexArray(_vao);
-  
-  // send and enable positions 
-  glBindBuffer(GL_ARRAY_BUFFER,_buffers[0]);
-  glBufferData(GL_ARRAY_BUFFER,_mesh->nb_vertices*3*sizeof(float),_mesh->vertices,GL_STATIC_DRAW);
+  glGenBuffers(2,_terrain);
+  glGenBuffers(1,&_quad);
+  glGenVertexArrays(1,&_vaoTerrain);
+  glGenVertexArrays(1,&_vaoQuad);
+
+  // create the VBO associated with the grid (the terrain)
+  glBindVertexArray(_vaoTerrain);
+  glBindBuffer(GL_ARRAY_BUFFER,_terrain[0]); // vertices
+  glBufferData(GL_ARRAY_BUFFER,_grid->nbVertices()*3*sizeof(float),_grid->vertices(),GL_STATIC_DRAW);
   glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,(void *)0);
   glEnableVertexAttribArray(0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,_terrain[1]); // indices
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER,_grid->nbFaces()*3*sizeof(int),_grid->faces(),GL_STATIC_DRAW);
 
-  // send and enable normals 
-  glBindBuffer(GL_ARRAY_BUFFER,_buffers[1]);
-  glBufferData(GL_ARRAY_BUFFER,_mesh->nb_vertices*3*sizeof(float),_mesh->normals,GL_STATIC_DRAW);
-  glVertexAttribPointer(1,3,GL_FLOAT,GL_TRUE,0,(void *)0);
-  glEnableVertexAttribArray(1);
-
-  // send and enable tangents
-  glBindBuffer(GL_ARRAY_BUFFER,_buffers[2]);
-  glBufferData(GL_ARRAY_BUFFER,_mesh->nb_vertices*3*sizeof(float),_mesh->tangents,GL_STATIC_DRAW);
-  glVertexAttribPointer(2,3,GL_FLOAT,GL_TRUE,0,(void *)0);
-  glEnableVertexAttribArray(2);
-
-  // send and enable coords 
-  glBindBuffer(GL_ARRAY_BUFFER,_buffers[3]);
-  glBufferData(GL_ARRAY_BUFFER,_mesh->nb_vertices*2*sizeof(float),_mesh->coords,GL_STATIC_DRAW);
-  glVertexAttribPointer(3,2,GL_FLOAT,GL_FALSE,0,(void *)0);
-  glEnableVertexAttribArray(3);
-
-  // send faces 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,_buffers[4]);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER,_mesh->nb_faces*3*sizeof(unsigned int),_mesh->faces,GL_STATIC_DRAW);
-
-  // back to normal
-  glBindVertexArray(0);
+  // create the VBO associated with the screen quad
+  glBindVertexArray(_vaoQuad);
+  glBindBuffer(GL_ARRAY_BUFFER,_quad); // vertices
+  glBufferData(GL_ARRAY_BUFFER, sizeof(quadData),quadData,GL_STATIC_DRAW);
+  glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,0,(void *)0);
+  glEnableVertexAttribArray(0);
 }
 
 void Viewer::deleteVAO() {
-  // delete your VAO here (function called in destructor)
-  glDeleteBuffers(5,_buffers);
-  glDeleteVertexArrays(1,&_vao);
+  glDeleteBuffers(2,_terrain);
+  glDeleteBuffers(1,&_quad);
+  glDeleteVertexArrays(1,&_vaoTerrain);
+  glDeleteVertexArrays(1,&_vaoQuad);
 }
 
 void Viewer::drawVAO() {
   // activate the VAO, draw the associated triangles and desactivate the VAO
   glBindVertexArray(_vao);
-  glDrawElements(GL_TRIANGLES,3*_mesh->nb_faces,GL_UNSIGNED_INT,(void *)0);
+  //glDrawElements(GL_TRIANGLES,3*_mesh->nb_faces,GL_UNSIGNED_INT,(void *)0);
   glBindVertexArray(0);
 }
 
 void Viewer::createShaders() {
   // add your own shader files here 
 
-  // *** texture mapping *** 
-  _vertexFilenames.push_back("shaders/texture-mapping.vert");
-  _fragmentFilenames.push_back("shaders/texture-mapping.frag");
-  // ******************************
+  _vertexFilenames.push_back("shaders/normal.vert");
+  _fragmentFilenames.push_back("shaders/normal.frag");
+   _vertexFilenames.push_back("shaders/noise.vert");
+  _fragmentFilenames.push_back("shaders/noise.frag");
 
-  // TODO: add your shaders here
 }
 
 void Viewer::enableShader(unsigned int shader) {
