@@ -17,7 +17,7 @@ CXX           = g++
 DEFINES       = -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_XML_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -O2 -march=x86-64 -mtune=generic -O2 -pipe -fstack-protector-strong -fno-plt -D_REENTRANT -Wall -W -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -O2 -march=x86-64 -mtune=generic -O2 -pipe -fstack-protector-strong -fno-plt -D_REENTRANT -Wall -W -fPIC $(DEFINES)
-INCPATH       = -I. -I../../ext/glm-0.9.4.1 -isystem /usr/include/libdrm -isystem /usr/include/qt -isystem /usr/include/qt/QtOpenGL -isystem /usr/include/qt/QtWidgets -isystem /usr/include/qt/QtGui -isystem /usr/include/qt/QtXml -isystem /usr/include/qt/QtCore -I. -I/usr/lib/qt/mkspecs/linux-g++
+INCPATH       = -I. -I../ext/glm-0.9.4.1 -isystem /usr/include/libdrm -isystem /usr/include/qt -isystem /usr/include/qt/QtOpenGL -isystem /usr/include/qt/QtWidgets -isystem /usr/include/qt/QtGui -isystem /usr/include/qt/QtXml -isystem /usr/include/qt/QtCore -I. -I/usr/lib/qt/mkspecs/linux-g++
 QMAKE         = /usr/bin/qmake
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -57,13 +57,15 @@ SOURCES       = shader.cpp \
 		trackball.cpp \
 		camera.cpp \
 		main.cpp \
-		viewer.cpp 
+		viewer.cpp \
+		grid.cpp 
 OBJECTS       = shader.o \
 		meshLoader.o \
 		trackball.o \
 		camera.o \
 		main.o \
-		viewer.o
+		viewer.o \
+		grid.o
 DIST          = /usr/lib/qt/mkspecs/features/spec_pre.prf \
 		/usr/lib/qt/mkspecs/common/unix.conf \
 		/usr/lib/qt/mkspecs/common/linux.conf \
@@ -349,12 +351,14 @@ DIST          = /usr/lib/qt/mkspecs/features/spec_pre.prf \
 		meshLoader.h \
 		trackball.h \
 		camera.h \
-		viewer.h shader.cpp \
+		viewer.h \
+		grid.h shader.cpp \
 		meshLoader.cpp \
 		trackball.cpp \
 		camera.cpp \
 		main.cpp \
-		viewer.cpp
+		viewer.cpp \
+		grid.cpp
 QMAKE_TARGET  = projet
 DESTDIR       = 
 TARGET        = projet
@@ -956,8 +960,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/qt/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents shader.h meshLoader.h trackball.h camera.h viewer.h $(DISTDIR)/
-	$(COPY_FILE) --parents shader.cpp meshLoader.cpp trackball.cpp camera.cpp main.cpp viewer.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents shader.h meshLoader.h trackball.h camera.h viewer.h grid.h $(DISTDIR)/
+	$(COPY_FILE) --parents shader.cpp meshLoader.cpp trackball.cpp camera.cpp main.cpp viewer.cpp grid.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -1059,6 +1063,9 @@ viewer.o: viewer.cpp viewer.h \
 		shader.h \
 		grid.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o viewer.o viewer.cpp
+
+grid.o: grid.cpp grid.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o grid.o grid.cpp
 
 ####### Install
 

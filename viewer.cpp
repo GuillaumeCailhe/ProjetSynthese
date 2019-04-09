@@ -17,6 +17,9 @@ Viewer::Viewer(const QGLFormat &format)
 
   setlocale(LC_ALL,"C");
 
+  _cam  = new Camera(1,glm::vec3(0,0,0));
+  _grid = new Grid();
+
   _timer->setInterval(10);
   connect(_timer,SIGNAL(timeout()),this,SLOT(updateGL()));
 }
@@ -123,7 +126,6 @@ void Viewer::createShaders() {
   _fragmentFilenames.push_back("shaders/normal.frag");
    _vertexFilenames.push_back("shaders/noise.vert");
   _fragmentFilenames.push_back("shaders/noise.frag");
-
 }
 
 void Viewer::enableShader(unsigned int shader) {
@@ -149,8 +151,6 @@ void Viewer::enableShader(unsigned int shader) {
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D,_texIds[0]);
   glUniform1i(glGetUniformLocation(id,"colormap"),0);
-
-  // TODO: send other textures here
 }
 
 

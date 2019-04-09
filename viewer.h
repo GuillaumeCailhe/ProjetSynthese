@@ -43,6 +43,12 @@ class Viewer : public QGLWidget {
   void createVAO();
   void deleteVAO();
   void drawVAO();
+  void drawVAOQuad();
+  void drawVAOGrid();
+
+  void createFBO();
+  void deleteFBO();
+  void initFBO();
 
   void createShaders();
   void enableShader(unsigned int shader=0);
@@ -55,6 +61,7 @@ class Viewer : public QGLWidget {
   unsigned int   _currentshader; // current shader index
 
   Camera *_cam;    // the camera
+  Grid *_grid;    // the grid to render the terrain
 
   glm::vec3 _light; // light direction
   bool      _mode;  // camera motion or light motion
@@ -75,7 +82,6 @@ class Viewer : public QGLWidget {
   GLuint _terrain[2];
 
   GLuint _quad;
-  Grid* _grid;
 };
 
 #endif // VIEWER_H
