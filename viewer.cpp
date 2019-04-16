@@ -309,6 +309,9 @@ void Viewer::paintGL() {
   glBindTexture(GL_TEXTURE_2D,_texIds[3]);
   glUniform1i(glGetUniformLocation(id,"aomap"),5);
 
+  // center camera
+  glViewport(0,0,width(),height());
+
   /*
     Drawing the scene
   */ 

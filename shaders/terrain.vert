@@ -16,7 +16,7 @@ out vec3 eyeView;
 out vec2 uvcoord;
 
 void main() {
-  uvcoord  = (vec2(position.x,position.y)*0.6+0.6);	
+  uvcoord  = (vec2(position.x,position.y)*0.5+0.5);	
   vec3 g = texture(heightmap,uvcoord).xyz;
   float h = g.x;
   
@@ -25,5 +25,5 @@ void main() {
   
   eyeView = normalize((mdvMat*vec4(adjustedPosition,1.0)).xyz);
   //tangentView = normalize(normalMat*tangent);
-  normalView = normalize(texture(normalmap,uvcoord).xyz);
+  normalView = normalize(texture(normalmap, uvcoord).xyz);
 }
