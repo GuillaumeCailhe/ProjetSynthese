@@ -1,6 +1,6 @@
 #version 330
 
-out vec4 outBuffer;
+out vec4 outbuffer;
 uniform sampler2D heightmap;
 in vec2 texcoord;
 
@@ -10,7 +10,6 @@ float value(in vec4 c) {
 	return c.x;// the height is stored in all channels (take the first one)
 
 }
-
 
 void main() {
 	vec2 ps = 1./vec2(textureSize(heightmap,0));

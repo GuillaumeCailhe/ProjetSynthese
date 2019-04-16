@@ -259,7 +259,7 @@ void Viewer::paintGL() {
   // perlin noise texture creation
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D,_noiseTextureID_N);
-  glUniform1i(glGetUniformLocation(_shaders[1]->id(),"heightmap"),0);
+  glUniform1i(glGetUniformLocation(_shaders[1]->id(),"colormap"),0);
 
   // clearing buffers
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -273,6 +273,8 @@ void Viewer::paintGL() {
   /*
     3rd pass : render the heightfield
   */
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
   enableShader(2);
   int id = _shaders[2]->id();
 
