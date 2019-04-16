@@ -20,10 +20,9 @@ void main() {
   vec3 g = texture(heightmap,uvcoord).xyz;
   float h = g.x;
   
-  vec3 adjustedPosition = vec3(position.x,position.y,h);
-  gl_Position = projMat*mdvMat*vec4(adjustedPosition,1.0);
+  gl_Position = projMat*mdvMat*vec4(vec3(position.x,position.y,h),1.0);
   
-  eyeView = normalize((mdvMat*vec4(adjustedPosition,1.0)).xyz);
+  eyeView = normalize((mdvMat*vec4(vec3(position.x,position.y,h),1.0)).xyz);
   //tangentView = normalize(normalMat*tangent);
   normalView = normalize(texture(normalmap, uvcoord).xyz);
 }

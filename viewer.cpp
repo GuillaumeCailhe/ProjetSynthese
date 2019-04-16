@@ -12,7 +12,7 @@ Viewer::Viewer(const QGLFormat &format)
   : QGLWidget(format),
     _timer(new QTimer(this)),
     _currentshader(0),
-    _light(glm::vec3(0,0,1)),
+    _light(glm::vec3(0,0,-1)),
     _mode(false) {
 
   setlocale(LC_ALL,"C");
@@ -164,9 +164,8 @@ void Viewer::initFBO() {
 
   // Attach textures
   glBindFramebuffer(GL_FRAMEBUFFER,_fboPerlin);
-
   glBindTexture(GL_TEXTURE_2D,_noiseTextureID_N);
-  glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,_noiseTextureID_N,0);
+  glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT1,GL_TEXTURE_2D,_noiseTextureID_N,0);
 
   glBindTexture(GL_TEXTURE_2D,_noiseTextureID_D);
   glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,_noiseTextureID_D,0);
@@ -307,7 +306,7 @@ void Viewer::paintGL() {
 
   glActiveTexture(GL_TEXTURE5);
   glBindTexture(GL_TEXTURE_2D,_texIds[3]);
-  glUniform1i(glGetUniformLocation(id,"aomap"),5);
+  glUniform1i(glGetUniformLocation(id,"occmap"),5);
 
   // center camera
   glViewport(0,0,width(),height());
@@ -441,8 +440,8 @@ void Viewer::initializeGL() {
   // init the first shader 
   createVAO();
 
-  //createFBO();
-  //initFBO();
+  createFBO();
+  initFBO();
 
   // starts the timer 
   _timer->start();
