@@ -50,6 +50,12 @@ class Viewer : public QGLWidget {
   void deleteFBO();
   void initFBO();
 
+  void pass1();
+  void pass2();
+  void pass3();
+  void pass4();
+  void pass5();
+
   void createShaders();
   void enableShader(unsigned int shader=0);
   void disableShader();

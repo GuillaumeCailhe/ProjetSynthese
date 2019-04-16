@@ -12,7 +12,7 @@ Viewer::Viewer(const QGLFormat &format)
   : QGLWidget(format),
     _timer(new QTimer(this)),
     _currentshader(0),
-    _light(glm::vec3(0,0,-1)),
+    _light(glm::vec3(0,0,0)),
     _mode(false) {
 
   setlocale(LC_ALL,"C");
@@ -41,7 +41,7 @@ void Viewer::createTextures() {
   
   // enable the use of 2D textures 
   glEnable(GL_TEXTURE_2D);
-  glGenTextures(4,_texIds);
+  glGenTextures(3,_texIds);
 
   // Diffuse
   image = QGLWidget::convertToGLFormat(QImage("textures/Rock_030_COLOR.jpg"));
@@ -65,20 +65,9 @@ void Viewer::createTextures() {
            GL_RGBA,GL_UNSIGNED_BYTE,(const GLvoid *)image.bits());
   glGenerateMipmap(GL_TEXTURE_2D);  
   
-  // Rough
-  image = QGLWidget::convertToGLFormat(QImage("textures/Rock_030_ROUGH.jpg"));
-  glBindTexture(GL_TEXTURE_2D,_texIds[2]);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR); 
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
-  glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA32F,image.width(),image.height(),0,
-           GL_RGBA,GL_UNSIGNED_BYTE,(const GLvoid *)image.bits());
-  glGenerateMipmap(GL_TEXTURE_2D);  
-  
   // Ambient occlusion
   image = QGLWidget::convertToGLFormat(QImage("textures/Rock_030_OCC.jpg"));
-  glBindTexture(GL_TEXTURE_2D,_texIds[3]);
+  glBindTexture(GL_TEXTURE_2D,_texIds[2]);
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR); 
   glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
@@ -89,7 +78,7 @@ void Viewer::createTextures() {
 }
 
 void Viewer::deleteTextures() {
-  glDeleteTextures(4,_texIds);
+  glDeleteTextures(3,_texIds);
 }
 
 void Viewer::createVAO() {
@@ -225,7 +214,7 @@ void Viewer::disableShader() {
   glUseProgram(0);
 }
 
-void Viewer::paintGL() {
+void Viewer::pass1(){
   /*
     First pass : generate a heightfield (the terrain) using a procedural perlin noise.
   */
@@ -246,7 +235,9 @@ void Viewer::paintGL() {
   // Deactivate
   glBindFramebuffer(GL_FRAMEBUFFER,0); // deactivate fbo
   disableShader();
+}
 
+void Viewer::pass2(){
   /*
     Second pass : generate the normal map associated with the heightfield
   */
@@ -268,7 +259,9 @@ void Viewer::paintGL() {
   drawVAOQuad();
   glBindFramebuffer(GL_FRAMEBUFFER,0);
   disableShader();
+}
 
+void Viewer::pass3(){
   /*
     3rd pass : render the heightfield
   */
@@ -302,15 +295,25 @@ void Viewer::paintGL() {
 
   glActiveTexture(GL_TEXTURE4);
   glBindTexture(GL_TEXTURE_2D,_texIds[2]);
-  glUniform1i(glGetUniformLocation(id,"roughmap"),4);
-
-  glActiveTexture(GL_TEXTURE5);
-  glBindTexture(GL_TEXTURE_2D,_texIds[3]);
-  glUniform1i(glGetUniformLocation(id,"occmap"),5);
+  glUniform1i(glGetUniformLocation(id,"occmap"),4);
 
   // center camera
   glViewport(0,0,width(),height());
+}
 
+void Viewer::pass4(){
+  // Not implemented
+}
+
+void Viewer::pass5(){
+  // Not implemented
+}
+
+void Viewer::paintGL() {
+  pass1();
+  pass2();
+  pass3();
+  
   /*
     Drawing the scene
   */ 

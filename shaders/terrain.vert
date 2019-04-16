@@ -19,9 +19,7 @@ void main() {
   uvcoord  = (vec2(position.x,position.y)*0.5+0.5);	
   vec3 g = texture(heightmap,uvcoord).xyz;
   float h = g.x;
-  
   gl_Position = projMat*mdvMat*vec4(vec3(position.x,position.y,h),1.0);
-  
   eyeView = normalize((mdvMat*vec4(vec3(position.x,position.y,h),1.0)).xyz);
   //tangentView = normalize(normalMat*tangent);
   normalView = normalize(texture(normalmap, uvcoord).xyz);
