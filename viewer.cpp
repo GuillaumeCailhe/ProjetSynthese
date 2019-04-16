@@ -43,33 +43,11 @@ void Viewer::createTextures() {
   glEnable(GL_TEXTURE_2D);
 
   // create one texture on the GPU
-  glGenTextures(1,_texIds);
-
-  // load an image (CPU side)
-  image = QGLWidget::convertToGLFormat(QImage("textures/chesterfield-color.png"));
-
-  // activate this texture (the current one)
-  glBindTexture(GL_TEXTURE_2D,_texIds[0]);
-
-  // set texture parameters 
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR); 
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
-
-  // transfer data from CPU to GPU memory
-  glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA32F,image.width(),image.height(),0,
-  	       GL_RGBA,GL_UNSIGNED_BYTE,(const GLvoid *)image.bits());
-
-  // generate mipmaps 
-  glGenerateMipmap(GL_TEXTURE_2D);
-
-
-  // TODO: create other textures here
+  //glGenTextures(1,_texIds);
 }
 
 void Viewer::deleteTextures() {
-  glDeleteTextures(1,_texIds);
+  //lDeleteTextures(1,_texIds);
 }
 
 void Viewer::createVAO() {
@@ -112,45 +90,90 @@ void Viewer::deleteVAO() {
   glDeleteVertexArrays(1,&_vaoQuad);
 }
 
-void Viewer::drawVAO() {
-  // activate the VAO, draw the associated triangles and desactivate the VAO
-  glBindVertexArray(_vao);
-  //glDrawElements(GL_TRIANGLES,3*_mesh->nb_faces,GL_UNSIGNED_INT,(void *)0);
+/**
+ * Create the Frame Buffer Object
+ * Used for Perlin Noise
+ */
+void Viewer::createFBO() {
+  glGenFramebuffers(1,&_fboPerlin);
+  glGenTextures(1,&_noiseTextureID_D);
+  glGenTextures(1,&_noiseTextureID_N);
+}
+
+/**
+ * Initialize the Frame Buffer Object
+ */
+void Viewer::initFBO() {
+  // Diffuse map texture
+  glBindTexture(GL_TEXTURE_2D,_noiseTextureID_D);
+  glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA32F,_resolutionX,_resolutionY,0,GL_RGBA,GL_FLOAT,NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); 
+
+  // Normal map texture
+  glBindTexture(GL_TEXTURE_2D,_noiseTextureID_N);
+  glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA32F,_resolutionX,_resolutionY,0,GL_RGBA,GL_FLOAT,NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+  // Attach textures
+  glBindFramebuffer(GL_FRAMEBUFFER,_fboPerlin);
+
+  glBindTexture(GL_TEXTURE_2D,_noiseTextureID_N);
+  glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,_noiseTextureID_N,0);
+  
+
+  glBindTexture(GL_TEXTURE_2D,_noiseTextureID_D);
+  glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,_noiseTextureID_D,0);
+
+  glBindFramebuffer(GL_FRAMEBUFFER,0);
+}
+
+/**
+ * Delete the created FBO
+ */
+void Viewer::deleteFBO() {
+  glDeleteFramebuffers(1,&_fboPerlin);
+  glDeleteTextures(1,&_noiseTextureID_D);
+  glDeleteTextures(1,&_noiseTextureID_N);
+}
+
+/**
+ * Draw a simple quad.
+ * This quad is used to generate the perlin noise.
+ */
+void Viewer::drawVAOQuad() {
+  glBindVertexArray(_vaoQuad);
+  glDrawArrays(GL_TRIANGLES,0,6);
+  glBindVertexArray(0);
+}
+
+/**
+ * Draw a grid.
+ * Is used to render the terrain.
+ */
+void Viewer::drawVAOGrid() {
+  glBindVertexArray(_vaoTerrain);
+  glDrawElements(GL_TRIANGLES,3*_grid->nbFaces(),GL_UNSIGNED_INT,(void *)0);
   glBindVertexArray(0);
 }
 
 void Viewer::createShaders() {
-  // add your own shader files here 
+  // perlin (pinpin issou) shader
+  _vertexFilenames.push_back("shaders/noise.vert");
+  _fragmentFilenames.push_back("shaders/noise.frag");
 
+    // Normal Shader
   _vertexFilenames.push_back("shaders/normal.vert");
   _fragmentFilenames.push_back("shaders/normal.frag");
-   _vertexFilenames.push_back("shaders/noise.vert");
-  _fragmentFilenames.push_back("shaders/noise.frag");
 }
 
 void Viewer::enableShader(unsigned int shader) {
-  // current shader ID 
-  GLuint id = _shaders[shader]->id(); 
-
-  // activate the current shader 
-  glUseProgram(id);
-
-  // send the model-view matrix 
-  glUniformMatrix4fv(glGetUniformLocation(id,"mdvMat"),1,GL_FALSE,&(_cam->mdvMatrix()[0][0]));
-
-  // send the projection matrix 
-  glUniformMatrix4fv(glGetUniformLocation(id,"projMat"),1,GL_FALSE,&(_cam->projMatrix()[0][0]));
-
-  // send the normal matrix (top-left 3x3 transpose(inverse(MDV))) 
-  glUniformMatrix3fv(glGetUniformLocation(id,"normalMat"),1,GL_FALSE,&(_cam->normalMatrix()[0][0]));
-
-  // send a light direction (defined in camera space)
-  glUniform3fv(glGetUniformLocation(id,"light"),1,&(_light[0]));
-
-  // send textures
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D,_texIds[0]);
-  glUniform1i(glGetUniformLocation(id,"colormap"),0);
+  glUseProgram(_shaders[shader]->id());
 }
 
 
@@ -160,17 +183,53 @@ void Viewer::disableShader() {
 }
 
 void Viewer::paintGL() {
-  // clear the color and depth buffers 
+  /*
+    First pass : generate a heightfield (the terrain) using a procedural perlin noise.
+  */
+  // Viewport initialization 
+  glBindFramebuffer(GL_FRAMEBUFFER,_fboPerlin); // fbo init
+  glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+  // Shader of the perlin noise
+  enableShader(0);
+
+  //clearing buffers
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glViewport(0,0,_resolutionX,_resolutionY);
 
-  // tell the GPU to use this specified shader and send custom variables (matrices and others)
-  enableShader(_currentshader);
+  // Drawing the quad
+  drawVAOQuad();
 
-  // actually draw the scene 
-  drawVAO();
+  // Deactivate
+  glBindFramebuffer(GL_FRAMEBUFFER,0); // deactivate fbo
+  disableShader();
 
-  // tell the GPU to stop using this shader 
-  disableShader(); 
+  /*
+    Second pass : generate the normal map associated with the heightfield
+  */
+  /*glBindFramebuffer(GL_FRAMEBUFFER,_fboPerlin);
+  // Drawing diffuse
+  glDrawBuffer(GL_COLOR_ATTACHMENT1); 
+  enableShader(1);
+
+  // perlin noise texture creation
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D,_noiseTextureID_N);
+  glUniform1i(glGetUniformLocation(_shaders[1]->id(),"colormap"),0);
+
+  // clearing buffers
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glViewport(0,0,_resolutionX,_resolutionY);
+
+  // draw
+  drawVAOQuad();
+  glBindFramebuffer(GL_FRAMEBUFFER,0);
+  disableShader();*/
+  /*
+    Drawing the scene
+  */ 
+  drawVAOGrid();
+  disableShader();
 }
 
 void Viewer::resizeGL(int width,int height) {
@@ -283,6 +342,9 @@ void Viewer::initializeGL() {
   // load shader files
   createShaders();
 
+  // create textures
+  createTextures();
+
   // init and load all shader files
   for(unsigned int i=0;i<_vertexFilenames.size();++i) {
     _shaders.push_back(new Shader());
@@ -291,9 +353,10 @@ void Viewer::initializeGL() {
 
   // init the first shader 
   createVAO();
-  createTextures();
+
+  //createFBO();
+  //initFBO();
 
   // starts the timer 
   _timer->start();
 }
-

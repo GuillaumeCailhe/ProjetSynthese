@@ -42,7 +42,7 @@ class Viewer : public QGLWidget {
  private:
   void createVAO();
   void deleteVAO();
-  void drawVAO();
+
   void drawVAOQuad();
   void drawVAOGrid();
 
@@ -80,8 +80,15 @@ class Viewer : public QGLWidget {
   GLuint _vaoTerrain;
   GLuint _vaoQuad;
   GLuint _terrain[2];
-
   GLuint _quad;
+
+  GLuint _resolutionX = 1024;
+  GLuint _resolutionY = 1024;
+  GLuint _noiseTextureID_D;
+  GLuint _noiseTextureID_N;
+
+
+  GLuint _fboPerlin;
 };
 
 #endif // VIEWER_H
