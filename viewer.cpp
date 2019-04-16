@@ -207,7 +207,7 @@ void Viewer::paintGL() {
   /*
     Second pass : generate the normal map associated with the heightfield
   */
-  /*glBindFramebuffer(GL_FRAMEBUFFER,_fboPerlin);
+  glBindFramebuffer(GL_FRAMEBUFFER,_fboPerlin);
   // Drawing diffuse
   glDrawBuffer(GL_COLOR_ATTACHMENT1); 
   enableShader(1);
@@ -218,18 +218,18 @@ void Viewer::paintGL() {
   glUniform1i(glGetUniformLocation(_shaders[1]->id(),"colormap"),0);
 
   // clearing buffers
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glViewport(0,0,_resolutionX,_resolutionY);
+  //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  //glViewport(0,0,_resolutionX,_resolutionY);
 
   // draw
   drawVAOQuad();
   glBindFramebuffer(GL_FRAMEBUFFER,0);
-  disableShader();*/
+  //disableShader();
   /*
     Drawing the scene
   */ 
-  drawVAOGrid();
-  disableShader();
+  //drawVAOGrid();
+  //disableShader();
 }
 
 void Viewer::resizeGL(int width,int height) {
