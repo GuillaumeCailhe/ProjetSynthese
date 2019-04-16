@@ -41,13 +41,55 @@ void Viewer::createTextures() {
   
   // enable the use of 2D textures 
   glEnable(GL_TEXTURE_2D);
+  glGenTextures(4,_texIds);
 
-  // create one texture on the GPU
-  //glGenTextures(1,_texIds);
+  // Diffuse
+  image = QGLWidget::convertToGLFormat(QImage("textures/Rock_030_COLOR.jpg"));
+  glBindTexture(GL_TEXTURE_2D,_texIds[0]);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR); 
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
+  glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA32F,image.width(),image.height(),0,
+           GL_RGBA,GL_UNSIGNED_BYTE,(const GLvoid *)image.bits());
+  glGenerateMipmap(GL_TEXTURE_2D);
+
+  // Normal
+  image = QGLWidget::convertToGLFormat(QImage("textures/Rock_030_NORM.jpg"));
+  glBindTexture(GL_TEXTURE_2D,_texIds[1]);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR); 
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
+  glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA32F,image.width(),image.height(),0,
+           GL_RGBA,GL_UNSIGNED_BYTE,(const GLvoid *)image.bits());
+  glGenerateMipmap(GL_TEXTURE_2D);  
+  
+  // Rough
+  image = QGLWidget::convertToGLFormat(QImage("textures/Rock_030_ROUGH.jpg"));
+  glBindTexture(GL_TEXTURE_2D,_texIds[2]);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR); 
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
+  glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA32F,image.width(),image.height(),0,
+           GL_RGBA,GL_UNSIGNED_BYTE,(const GLvoid *)image.bits());
+  glGenerateMipmap(GL_TEXTURE_2D);  
+  
+  // Ambient occlusion
+  image = QGLWidget::convertToGLFormat(QImage("textures/Rock_030_OCC.jpg"));
+  glBindTexture(GL_TEXTURE_2D,_texIds[3]);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR); 
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_REPEAT);
+  glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA32F,image.width(),image.height(),0,
+           GL_RGBA,GL_UNSIGNED_BYTE,(const GLvoid *)image.bits());
+  glGenerateMipmap(GL_TEXTURE_2D);
 }
 
 void Viewer::deleteTextures() {
-  //lDeleteTextures(1,_texIds);
+  glDeleteTextures(4,_texIds);
 }
 
 void Viewer::createVAO() {
@@ -104,7 +146,7 @@ void Viewer::createFBO() {
  * Initialize the Frame Buffer Object
  */
 void Viewer::initFBO() {
-  // Diffuse map texture
+  // Diffuse map texture (perlin noise)
   glBindTexture(GL_TEXTURE_2D,_noiseTextureID_D);
   glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA32F,_resolutionX,_resolutionY,0,GL_RGBA,GL_FLOAT,NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -125,7 +167,6 @@ void Viewer::initFBO() {
 
   glBindTexture(GL_TEXTURE_2D,_noiseTextureID_N);
   glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,_noiseTextureID_N,0);
-  
 
   glBindTexture(GL_TEXTURE_2D,_noiseTextureID_D);
   glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,_noiseTextureID_D,0);
@@ -167,15 +208,18 @@ void Viewer::createShaders() {
   _vertexFilenames.push_back("shaders/noise.vert");
   _fragmentFilenames.push_back("shaders/noise.frag");
 
-    // Normal Shader
+  // Normal Shader
   _vertexFilenames.push_back("shaders/normal.vert");
   _fragmentFilenames.push_back("shaders/normal.frag");
+
+  // to render the terrain
+  _vertexFilenames.push_back("shaders/terrain.vert");
+  _fragmentFilenames.push_back("shaders/terrain.frag");
 }
 
 void Viewer::enableShader(unsigned int shader) {
   glUseProgram(_shaders[shader]->id());
 }
-
 
 void Viewer::disableShader() {
   // desactivate all shaders 
@@ -215,21 +259,59 @@ void Viewer::paintGL() {
   // perlin noise texture creation
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D,_noiseTextureID_N);
-  glUniform1i(glGetUniformLocation(_shaders[1]->id(),"colormap"),0);
+  glUniform1i(glGetUniformLocation(_shaders[1]->id(),"heightmap"),0);
 
   // clearing buffers
-  //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  //glViewport(0,0,_resolutionX,_resolutionY);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glViewport(0,0,_resolutionX,_resolutionY);
 
-  // draw
+  // disable 
   drawVAOQuad();
   glBindFramebuffer(GL_FRAMEBUFFER,0);
-  //disableShader();
+  disableShader();
+
+  /*
+    3rd pass : render the heightfield
+  */
+  enableShader(2);
+  int id = _shaders[2]->id();
+
+  // Sending matrices
+  glUniformMatrix4fv(glGetUniformLocation(id,"mdvMat"),1,GL_FALSE,&(_cam->mdvMatrix()[0][0]));
+  glUniformMatrix4fv(glGetUniformLocation(id,"projMat"),1,GL_FALSE,&(_cam->projMatrix()[0][0]));
+  glUniformMatrix3fv(glGetUniformLocation(id,"normalMat"),1,GL_FALSE,&(_cam->normalMatrix()[0][0]));
+  glUniform3fv(glGetUniformLocation(id,"light"),1,&(_light[0]));
+
+  // Sending textures
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D,_noiseTextureID_D);
+  glUniform1i(glGetUniformLocation(id,"heightmap"),0);
+
+  glActiveTexture(GL_TEXTURE1);
+  glBindTexture(GL_TEXTURE_2D,_noiseTextureID_N);
+  glUniform1i(glGetUniformLocation(id,"normalmap"),1);
+
+  glActiveTexture(GL_TEXTURE2);
+  glBindTexture(GL_TEXTURE_2D,_texIds[0]);
+  glUniform1i(glGetUniformLocation(id,"colormap"),2);
+
+  glActiveTexture(GL_TEXTURE3);
+  glBindTexture(GL_TEXTURE_2D,_texIds[1]);
+  glUniform1i(glGetUniformLocation(id,"normalmap"),3);  
+
+  glActiveTexture(GL_TEXTURE4);
+  glBindTexture(GL_TEXTURE_2D,_texIds[2]);
+  glUniform1i(glGetUniformLocation(id,"roughmap"),4);
+
+  glActiveTexture(GL_TEXTURE5);
+  glBindTexture(GL_TEXTURE_2D,_texIds[3]);
+  glUniform1i(glGetUniformLocation(id,"aomap"),5);
+
   /*
     Drawing the scene
   */ 
-  //drawVAOGrid();
-  //disableShader();
+  drawVAOGrid();
+  disableShader();
 }
 
 void Viewer::resizeGL(int width,int height) {

@@ -75,7 +75,7 @@ class Viewer : public QGLWidget {
   GLuint _buffers[5];
 
   // texture ids 
-  GLuint _texIds[1];
+  GLuint _texIds[10];
 
   GLuint _vaoTerrain;
   GLuint _vaoQuad;

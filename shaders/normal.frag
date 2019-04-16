@@ -2,14 +2,11 @@
 
 out vec4 outBuffer;
 uniform sampler2D heightmap;
-
 in vec2 texcoord;
 
 
 float value(in vec4 c) {
-
 	// gradient of what:
-
 	return c.x;// the height is stored in all channels (take the first one)
 
 }
